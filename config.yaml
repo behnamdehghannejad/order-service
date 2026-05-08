@@ -1,0 +1,27 @@
+app:
+  name: task-manager
+  port: 8080
+
+grpc:
+  host: "0.0.0.0"
+  port: 50100
+
+database:
+  host: localhost
+  port: 5000
+  user: admin
+  password: password
+  name: task_service
+  sslmode: disable
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+logger:
+  level: info
+
+#deps:
+#  - buf.build/googleapis/googleapis

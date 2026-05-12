@@ -23,5 +23,4 @@ redis:
 logger:
   level: info
 
-#deps:
-#  - buf.build/googleapis/googleapis
+#  APP_ENV=develop go run main.go

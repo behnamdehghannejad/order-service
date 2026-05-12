@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "order-service/internal/app"
 
+func main() {
+	app.Start()
 }

@@ -1,20 +1,17 @@
 package app
 
 import (
-	"order-service/internal/utils"
+	"order-service/internal/infra/repository/impl"
 )
 
 func Start() error {
 	cfg := LoadConfig()
 	postgres, err := NewPostgres(cfg)
 	if err != nil {
-		return utils.AppError{
-			Code:    404,
-			Message: "user not found",
-		}
+		return err
 	}
 
-	err = postgres.AutoMigrate()
+	err = postgres.AutoMigrate(&impl.OrderEntity{})
 
 	return err
 }

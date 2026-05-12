@@ -48,7 +48,7 @@ func NewPostgres(cfg *Config) (*gorm.DB, error) {
 
 	err = sqlDB.Ping()
 	if err != nil {
-		log.Fatalf("failed to connect postgres with ip: %s and port: %s -> ERROR: %v", cfg.Database.Host, cfg.Database.Port, err)
+		log.Fatalf("failed to connect repository with ip: %s and port: %s -> ERROR: %v", cfg.Database.Host, cfg.Database.Port, err)
 		return nil, err
 	}
 

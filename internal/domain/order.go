@@ -5,9 +5,9 @@ import (
 )
 
 type Order struct {
-	ID        int64
-	UserId    int64
-	Amount    int64
+	ID        int
+	UserId    int
+	Amount    float64
 	Status    Status
 	CreatedAt time.Time
 	UpdatedAt time.Time

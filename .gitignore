@@ -10,8 +10,8 @@
 *.out
 coverage.out
 
-# Dependency directories
-vendor/
+## Dependency directories
+#vendor/
 
 # Go workspace file
 *.code-workspace

@@ -25,7 +25,7 @@ func (handler *OrderHandler) Create(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	err := handler.service.Create(req)
+	err := handler.service.Create(toDomain(req))
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
@@ -36,7 +36,6 @@ func (handler *OrderHandler) Create(writer http.ResponseWriter, request *http.Re
 }
 
 func (handler *OrderHandler) GetById(writer http.ResponseWriter, request *http.Request) {
-
 	idStr := request.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -102,7 +101,7 @@ func (handler *OrderHandler) updateStatus(writer http.ResponseWriter, request *h
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 	}
 
-	if err := handler.service.UpdateOrderStatus(id, domain.Status(req.Status)); err != nil {
+	if err := handler.service.UpdateStatus(id, domain.Status(req.Status)); err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -132,6 +131,14 @@ func toOrderResponse(order domain.Order) dto.OrderResponse {
 		Status:    string(order.Status),
 		CreatedAt: order.CreatedAt,
 		UpdatedAt: order.UpdatedAt,
+	}
+}
+
+func toDomain(order dto.CreateOrderRequest) domain.Order {
+	return domain.Order{
+		UserID: order.UserID,
+		Amount: order.Amount,
+		Status: domain.Status(order.Status),
 	}
 }
 

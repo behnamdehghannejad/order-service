@@ -22,16 +22,16 @@ protoc \
 
 
 ======= TO ADD GRPC BY HTTP ======
-git clone https://github.com/googleapis/googleapis.git ~/googleapis
+git clone https://github.com/googleapis/googleapis.git ./googleapis
 
-mkdir -p third_party/google/protobuf
+mkdir -p ./third_party/google/protobuf
 
-cp /usr/local/include/google/protobuf/*.proto third_party/google/protobuf/
+cp /usr/local/include/google/protobuf/*.proto ./third_party/google/protobuf/
 
    protoc --version
 
-sudo chmod -R a+r googleapis/google/api
-sudo chmod -R a+r third_party/google/protobuf
+sudo chmod -R a+r ./googleapis/google/api
+sudo chmod -R a+r ./third_party/google/protobuf
 
 go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@latest
 

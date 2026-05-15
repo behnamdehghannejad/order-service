@@ -8,12 +8,12 @@ import (
 )
 
 type OrderEntity struct {
-	ID        int64         `gorm:"column:id;primary_key;autoIncrement"`
-	UserId    int64         `gorm:"column:user_id"`
-	Amount    int64         `gorm:"column:amount"`
+	ID        int           `gorm:"column:id;primary_key;autoIncrement"`
+	UserId    int           `gorm:"column:user_id"`
+	Amount    float32       `gorm:"column:amount"`
 	Status    domain.Status `gorm:"column:status"`
 	CreatedAt time.Time     `gorm:"column:created_at"`
-	UpdatedAt time.Time     `gorm:"column:updated_at"`
+	UpdatedAt time.Time     `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (OrderEntity) TableName() string {
@@ -29,7 +29,10 @@ func NewRepository(db *gorm.DB) *Repository {
 }
 
 func (repo *Repository) Create(order domain.Order) error {
-	return repo.DB.Create(toEntity(order)).Error
+	entity := toEntity(order)
+	entity.CreatedAt = time.Now()
+
+	return repo.DB.Create(entity).Error
 }
 
 func (repo *Repository) GetById(id int64) (*domain.Order, error) {
@@ -76,7 +79,7 @@ func (repo *Repository) DeleteOrder(id int64) error {
 
 func toEntity(order domain.Order) OrderEntity {
 	return OrderEntity{
-		UserId: order.UserId,
+		UserId: order.UserID,
 		Amount: order.Amount,
 		Status: order.Status,
 	}
@@ -85,7 +88,7 @@ func toEntity(order domain.Order) OrderEntity {
 func toDomain(order OrderEntity) *domain.Order {
 	return &domain.Order{
 		ID:        order.ID,
-		UserId:    order.UserId,
+		UserID:    order.UserId,
 		Amount:    order.Amount,
 		Status:    order.Status,
 		CreatedAt: order.CreatedAt,

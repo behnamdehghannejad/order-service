@@ -44,12 +44,12 @@ func LoadConfig() *Config {
 	env := os.Getenv("APP_ENV")
 
 	if env == "" {
-		env = "development"
+		env = "develop"
 	}
 
 	viper.SetConfigName(env)
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./config")
+	viper.AddConfigPath("./")
 
 	viper.AutomaticEnv()
 

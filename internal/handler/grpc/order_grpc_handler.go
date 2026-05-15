@@ -5,25 +5,24 @@ import (
 	"order-service/internal/domain"
 	"time"
 
-	"order-service/internal/handler/dto"
 	"order-service/internal/service"
 	pb "order-service/proto/generate"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-type OrderHandler struct {
+type OrderGrpcHandler struct {
 	pb.UnimplementedOrderServiceServer
 	service service.OrderService
 }
 
-func NewOrderHandler(service service.OrderService) *OrderHandler {
-	return &OrderHandler{
+func NewOrderGrpcHandler(service service.OrderService) *OrderGrpcHandler {
+	return &OrderGrpcHandler{
 		service: service,
 	}
 }
 
-func (handler *OrderHandler) Create(ctx context.Context, request *pb.CreateRequest) (*pb.CreateResponse, error) {
+func (handler *OrderGrpcHandler) Create(ctx context.Context, request *pb.CreateRequest) (*pb.CreateResponse, error) {
 
 	requestDto := toDomain(request)
 
@@ -36,7 +35,7 @@ func (handler *OrderHandler) Create(ctx context.Context, request *pb.CreateReque
 	}, nil
 }
 
-func (handler *OrderHandler) GetByID(ctx context.Context, request *pb.GetByIdRequest) (*pb.GetByIdResponse, error) {
+func (handler *OrderGrpcHandler) GetByID(ctx context.Context, request *pb.GetByIdRequest) (*pb.GetByIdResponse, error) {
 
 	order, err := handler.service.GetByID(int(request.Id))
 	if err != nil {
@@ -46,19 +45,17 @@ func (handler *OrderHandler) GetByID(ctx context.Context, request *pb.GetByIdReq
 	return &pb.GetByIdResponse{Order: toProto(order)}, nil
 }
 
-func (handler *OrderHandler) GetByUerID(ctx context.Context, request *pb.GetByUserIdRequest) (*pb.GetByUserIdResponse, error) {
+func (handler *OrderGrpcHandler) GetByUerID(ctx context.Context, request *pb.GetByUserIdRequest) (*pb.GetByUserIdResponse, error) {
 
 	order, err := handler.service.GetByUserId(int(request.Id))
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.GetByUserIdResponse{
-		Order: toProto(order),
-	}, nil
+	return &pb.GetByUserIdResponse{Order: toProto(order)}, nil
 }
 
-func (handler *OrderHandler) ListAll(ctx context.Context, request *emptypb.Empty) (*pb.ListOrderResponse, error) {
+func (handler *OrderGrpcHandler) ListAll(ctx context.Context, request *emptypb.Empty) (*pb.ListOrderResponse, error) {
 
 	orders, err := handler.service.ListAll()
 	if err != nil {
@@ -73,16 +70,17 @@ func (handler *OrderHandler) ListAll(ctx context.Context, request *emptypb.Empty
 	return &pb.ListOrderResponse{Orders: result}, nil
 }
 
-func (handler *OrderHandler) UpdateStatus(ctx context.Context, request *pb.UpdateStatusRequest) (*pb.UpdateStatusResponse, error) {
+func (handler *OrderGrpcHandler) UpdateStatus(ctx context.Context, request *pb.UpdateStatusRequest) (*pb.UpdateStatusResponse, error) {
 
-	if err := handler.service.UpdateStatus(int(request.Id), domain.Status(request.Status)); err != nil {
+	order, err := handler.service.UpdateStatus(int(request.Id), domain.Status(request.Status))
+	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return &pb.UpdateStatusResponse{Order: toProto(order)}, nil
 }
 
-func (handler *OrderHandler) Delete(ctx context.Context, request *pb.DeleteRequest) (*emptypb.Empty, error) {
+func (handler *OrderGrpcHandler) Delete(ctx context.Context, request *pb.DeleteRequest) (*emptypb.Empty, error) {
 	if err := handler.service.Delete(int(request.Id)); err != nil {
 		return nil, err
 	}

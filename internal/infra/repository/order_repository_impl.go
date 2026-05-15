@@ -1,4 +1,4 @@
-package impl
+package repository
 
 import (
 	"order-service/internal/domain"
@@ -20,50 +20,66 @@ func (OrderEntity) TableName() string {
 	return "orders"
 }
 
-type Repository struct {
+type OrderRepositoryImpl struct {
 	DB *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{DB: db}
+func NewOrderRepository(db *gorm.DB) *OrderRepositoryImpl {
+	return &OrderRepositoryImpl{DB: db}
 }
 
-func (repo *Repository) Create(order domain.Order) error {
+func (repo *OrderRepositoryImpl) Create(order domain.Order) error {
 	entity := toEntity(order)
 	entity.CreatedAt = time.Now()
 
 	return repo.DB.Create(entity).Error
 }
 
-func (repo *Repository) GetById(id int64) (*domain.Order, error) {
+func (repo *OrderRepositoryImpl) GetById(id int) (domain.Order, error) {
 	var order OrderEntity
 	if err := repo.DB.Where("id = ?", id).First(&order).Error; err != nil {
-		return nil, err
+		return domain.Order{}, err
 	}
 	return toDomain(order), nil
 }
 
-func (repo *Repository) GetByUserId(userId int64) (*domain.Order, error) {
+func (repo *OrderRepositoryImpl) GetByUserId(userId int) (domain.Order, error) {
 	var order OrderEntity
 	if err := repo.DB.Where("user_id = ?", userId).First(&order).Error; err != nil {
-		return nil, err
+		return domain.Order{}, err
 	}
 	return toDomain(order), nil
 }
 
-func (repo *Repository) updateOrderStatus(id int64, status domain.Status) (*domain.Order, error) {
+func (repo *OrderRepositoryImpl) UpdateStatus(id int, status domain.Status) (domain.Order, error) {
 	var order OrderEntity
+
 	if err := repo.DB.Model(&order).
 		Where("id = ?", id).
 		Update("status", status).
 		Error; err != nil {
-		return nil, err
+		return domain.Order{}, err
 	}
 
 	return toDomain(order), nil
 }
 
-func (repo *Repository) DeleteOrder(id int64) error {
+func (repo *OrderRepositoryImpl) AllOrders() ([]domain.Order, error) {
+	entities := make([]OrderEntity, 0, 50)
+
+	if err := repo.DB.Find(&entities).Error; err != nil {
+		return nil, err
+	}
+
+	orders := make([]domain.Order, 0, len(entities))
+	for _, entity := range entities {
+		orders = append(orders, toDomain(entity))
+	}
+
+	return orders, nil
+}
+
+func (repo *OrderRepositoryImpl) Delete(id int) error {
 	result := repo.DB.Delete(&OrderEntity{}, id)
 
 	if result.Error != nil {
@@ -85,8 +101,8 @@ func toEntity(order domain.Order) OrderEntity {
 	}
 }
 
-func toDomain(order OrderEntity) *domain.Order {
-	return &domain.Order{
+func toDomain(order OrderEntity) domain.Order {
+	return domain.Order{
 		ID:        order.ID,
 		UserID:    order.UserId,
 		Amount:    order.Amount,

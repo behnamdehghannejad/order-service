@@ -4,8 +4,9 @@ import "order-service/internal/domain"
 
 type OrderRepository interface {
 	Create(order domain.Order) error
-	GetById(id int64) (*domain.Order, error)
-	GetByUserId(userId int64) (*domain.Order, error)
-	updateOrderStatus(id int64, status domain.Status) (*domain.Order, error)
-	DeleteOrder(id int64) error
+	GetById(id int) (domain.Order, error)
+	GetByUserId(userId int) (domain.Order, error)
+	UpdateStatus(id int, status domain.Status) (domain.Order, error)
+	AllOrders() ([]domain.Order, error)
+	Delete(id int) error
 }

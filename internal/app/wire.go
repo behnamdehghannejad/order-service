@@ -2,8 +2,8 @@ package app
 
 import (
 	"fmt"
+	handler "order-service/internal/handler/grpc"
 	"order-service/internal/infra/repository"
-	"order-service/internal/infra/repository/impl"
 	"order-service/internal/service"
 )
 
@@ -14,20 +14,21 @@ func Start() error {
 		return err
 	}
 
-	err = postgres.AutoMigrate(&impl.OrderEntity{})
+	err = postgres.AutoMigrate(&repository.OrderEntity{})
 
-	repo := repository.NewTaskRepository(db)
-	service := service.NewTaskService(repo)
-	taskHandler := handler.NewTaskHandler(service)
+	orderRepository := repository.NewOrderRepository(postgres)
+	orderService := service.NewOrderService(orderRepository)
+	orderGrpcHandler := handler.NewOrderGrpcHandler(orderService)
+	runServer(cfg, orderGrpcHandler)
 
 	return err
 }
 
-func runServer(cfg *Config, taskHandler *handler2.TaskHandler) {
+func runServer(cfg *Config, taskHandler *handler.OrderGrpcHandler) {
 	grpcAddress := fmt.Sprintf("%s:%d", cfg.GRPC.Host, cfg.GRPC.Port)
-	// Start HTTP Gateway in goroutine
-	go server.RunHTTPGateway(grpcAddress, cfg.App.Port)
 
+	// Start HTTP Gateway in goroutine
+	go RunHTTPGateway(grpcAddress, cfg.App.Port)
 	// Start gRPC server in main thread (blocking)
-	server.RunGrpcServer(cfg, grpcAddress, taskHandler)
+	RunGrpcServer(grpcAddress, taskHandler)
 }

@@ -50,10 +50,7 @@ func (handler *OrderHandler) GetById(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	writer.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(writer).Encode(toOrderResponse(order)); err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-	}
+	returnResponse(writer, order)
 }
 
 func (handler *OrderHandler) GetByUserId(writer http.ResponseWriter, request *http.Request) {
@@ -68,14 +65,10 @@ func (handler *OrderHandler) GetByUserId(writer http.ResponseWriter, request *ht
 		http.Error(writer, err.Error(), http.StatusNotFound)
 	}
 
-	writer.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(writer).Encode(toOrderResponse(order)); err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-	}
+	returnResponse(writer, order)
 }
 
 func (handler *OrderHandler) listAll(writer http.ResponseWriter, request *http.Request) {
-
 	all, err := handler.service.ListAll()
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -101,12 +94,19 @@ func (handler *OrderHandler) updateStatus(writer http.ResponseWriter, request *h
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 	}
 
-	if err := handler.service.UpdateStatus(id, domain.Status(req.Status)); err != nil {
+	order, err := handler.service.UpdateStatus(id, domain.Status(req.Status))
+	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
 
-	writer.WriteHeader(http.StatusNoContent)
-	json.NewEncoder(writer)
+	returnResponse(writer, order)
+}
+
+func returnResponse(writer http.ResponseWriter, order domain.Order) {
+	writer.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(writer).Encode(toOrderResponse(order)); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (handler *OrderHandler) Delete(writer http.ResponseWriter, request *http.Request) {

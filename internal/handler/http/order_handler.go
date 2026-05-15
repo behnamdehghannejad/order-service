@@ -10,59 +10,135 @@ import (
 )
 
 type OrderHandler struct {
-	orderService service.OrderService
+	service service.OrderService
 }
 
-func NewOrderHandler(orderService service.OrderService) *OrderHandler {
-	return &OrderHandler{orderService: orderService}
+func NewOrderHandler(service service.OrderService) *OrderHandler {
+	return &OrderHandler{service: service}
 }
 
-func (h *OrderHandler) CreateOrder(responseWriter http.ResponseWriter, request *http.Request) {
+func (handler *OrderHandler) Create(writer http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
-
 	var req dto.CreateOrderRequest
-
 	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
-		http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err := h.orderService.Create(req)
+	err := handler.service.Create(req)
 	if err != nil {
-		http.Error(responseWriter, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	responseWriter.WriteHeader(http.StatusCreated)
-	json.NewEncoder(responseWriter)
+	writer.WriteHeader(http.StatusCreated)
+	json.NewEncoder(writer)
 }
 
-func (h *OrderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
+func (handler *OrderHandler) GetById(writer http.ResponseWriter, request *http.Request) {
 
-	idStr := r.PathValue("id")
+	idStr := request.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		http.Error(writer, "invalid id", http.StatusBadRequest)
 		return
 	}
 
-	order, err := h.orderService.GetByID(id)
+	order, err := handler.service.GetByID(id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(writer, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(order)
+	writer.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(writer).Encode(toOrderResponse(order)); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
 }
 
-func toCreateOrderResponse(order domain.Order) dto.CreateOrderResponse {
-	return dto.CreateOrderResponse{
+func (handler *OrderHandler) GetByUserId(writer http.ResponseWriter, request *http.Request) {
+	userIdStr := request.PathValue("user-id")
+	userId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		http.Error(writer, "invalid id", http.StatusBadRequest)
+	}
+
+	order, err := handler.service.GetByUserId(userId)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusNotFound)
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(writer).Encode(toOrderResponse(order)); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (handler *OrderHandler) listAll(writer http.ResponseWriter, request *http.Request) {
+
+	all, err := handler.service.ListAll()
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(writer).Encode(toResponseList(all)); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (handler *OrderHandler) updateStatus(writer http.ResponseWriter, request *http.Request) {
+	defer request.Body.Close()
+
+	idStr := request.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(writer, "invalid id", http.StatusBadRequest)
+	}
+
+	var req dto.OrderStatusRequest
+	if err := json.NewDecoder(request.Body).Decode(&req); err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+	}
+
+	if err := handler.service.UpdateOrderStatus(id, domain.Status(req.Status)); err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+	}
+
+	writer.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(writer)
+}
+
+func (handler *OrderHandler) Delete(writer http.ResponseWriter, request *http.Request) {
+	idStr := request.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(writer, "invalid id", http.StatusBadRequest)
+	}
+
+	if err := handler.service.Delete(id); err != nil {
+		http.Error(writer, err.Error(), http.StatusNotFound)
+	}
+
+	writer.WriteHeader(http.StatusNoContent)
+	json.NewEncoder(writer)
+}
+
+func toOrderResponse(order domain.Order) dto.OrderResponse {
+	return dto.OrderResponse{
 		UserID:    order.ID,
 		Amount:    order.Amount,
 		Status:    string(order.Status),
 		CreatedAt: order.CreatedAt,
 		UpdatedAt: order.UpdatedAt,
 	}
+}
+
+func toResponseList(all []domain.Order) []dto.OrderResponse {
+	allOrderResponse := make([]dto.OrderResponse, 0, len(all))
+	for i, order := range all {
+		allOrderResponse[i] = toOrderResponse(order)
+	}
+	return allOrderResponse
 }

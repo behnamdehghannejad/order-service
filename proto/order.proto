@@ -5,43 +5,43 @@ option go_package = "task-manager/proto/generate;proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
-service TaskService {
-  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {
+service OrderService {
+  rpc Create(CreateRequest) returns (CreateResponse) {
     option (google.api.http) = {
       post: "/order/create"
       body: "*"
     };
   }
 
-  rpc GetOrderByID(GetOrderRequest) returns (GetOrderResponse) {
+  rpc GetByID(GetByIdRequest) returns (GetByIdResponse) {
     option (google.api.http) = {
-      post: "/order/get/id"
+      post: "/order/get/{id}"
       body: "*"
     };
   }
 
-  rpc GetOrderByUerID(CreateOrderRequest) returns (CreateOrderResponse) {
+  rpc GetByUerID(GetByUserIdRequest) returns (GetByUserIdResponse) {
     option (google.api.http) = {
-      post: "/order/get/user-id"
+      post: "/order/get/{user-id}"
       body: "*"
     };
   }
 
-  rpc ListOrders(google.protobuf.Empty) returns (ListOrderResponse) {
+  rpc ListAll(google.protobuf.Empty) returns (ListOrderResponse) {
     option (google.api.http) = {
       post: "/order/list"
       body: "*"
     };
   }
 
-  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse) {
+  rpc UpdateStatus(UpdateStatusRequest) returns (UpdateStatusResponse) {
     option (google.api.http) = {
-      put: "/order/update/status"
+      put: "/order/update/status/{id}"
       body: "*"
     };
   }
 
-  rpc DeleteOrder(DeleteOrderRequest) returns (google.protobuf.Empty) {
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/order/delete"
       body: "*"
@@ -58,7 +58,7 @@ message Order {
   string updatedAt = 6;
 }
 
-message CreateOrderRequest {
+message CreateRequest {
   int64 userId = 1;
   int64 amount = 2;
   Status status = 3;
@@ -71,15 +71,23 @@ enum Status {
   DELIVERED = 3;
 }
 
-message CreateOrderResponse {
+message CreateResponse {
   Order order = 1;
 }
 
-message GetOrderRequest {
+message GetByIdRequest {
   int64 id = 1;
 }
 
-message GetOrderResponse {
+message GetByIdResponse {
+  Order order = 1;
+}
+
+message GetByUserIdRequest {
+  int64 id = 1;
+}
+
+message GetByUserIdResponse {
   Order order = 1;
 }
 
@@ -87,15 +95,15 @@ message ListOrderResponse {
   repeated Order orders = 1;
 }
 
-message UpdateOrderStatusRequest {
+message UpdateStatusRequest {
   int64 id = 1;
   Status status = 2;
 }
 
-message UpdateOrderStatusResponse {
+message UpdateStatusResponse {
   Order order = 1;
 }
 
-message DeleteOrderRequest {
+message DeleteRequest {
   int64 id = 1;
 }
